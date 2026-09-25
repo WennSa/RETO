@@ -1,11 +1,700 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Reto Express: Ahorro Voluntario</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --accent: #10b981;
+      --accent-dark: #059669;
+      --danger: #ef4444;
+      --bg-dark: #0f172a;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg-dark);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 8px;
+    }
+
+    .device-container {
+      width: 100%;
+      max-width: 410px;
+      height: 680px;
+      background: #f8fafc;
+      border-radius: 32px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 5px solid #334155;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    header {
+      background: white;
+      padding: 12px 18px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge-stage {
+      background: #eff6ff;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+
+    .timer-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .stage-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      transition: all 0.3s ease;
+    }
+
+    .dot.active {
+      background: var(--primary);
+      width: 16px;
+      border-radius: 10px;
+    }
+
+    .screen {
+      display: none;
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      color: var(--text);
+      line-height: 1.25;
+      margin-bottom: 4px;
+    }
+
+    p.desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+      margin-bottom: 12px;
+    }
+
+    /* Pantalla 0: Gancho inicial */
+    .welcome-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .welcome-avatar {
+      font-size: 4.2rem;
+      margin-bottom: 10px;
+      animation: float 2s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .challenge-perks {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+      margin: 14px 0;
+    }
+
+    .perk-chip {
+      background: white;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Pantalla 1: Avatar y Gastos */
+    .avatar-zone {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+      margin-bottom: 12px;
+      border: 1px solid #bfdbfe;
+    }
+
+    .avatar-icon {
+      font-size: 3rem;
+      display: inline-block;
+      transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .avatar-icon.bounce {
+      transform: scale(1.2) translateY(-4px);
+    }
+
+    .coin-counter {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+      margin-top: 2px;
+    }
+
+    .items-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .item-btn {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .item-btn.slashed {
+      border-color: var(--accent);
+      background: #f0fdf4;
+    }
+
+    .item-btn.slashed::after {
+      content: "✓ LISTO";
+      position: absolute;
+      top: 4px;
+      font-size: 0.55rem;
+      font-weight: 800;
+      color: var(--accent-dark);
+      background: #dcfce7;
+      padding: 1px 5px;
+      border-radius: 8px;
+    }
+
+    .item-icon { font-size: 1.4rem; }
+    .item-title { font-size: 0.75rem; font-weight: 700; color: var(--text); }
+    .item-price { font-size: 0.72rem; color: var(--danger); font-weight: 600; }
+
+    /* Pantalla 2: Comparativa */
+    .calc-card {
+      background: white;
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .slider-wrap {
+      margin-bottom: 14px;
+    }
+
+    .slider-wrap label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    input[type=range] {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      accent-color: var(--primary);
+    }
+
+    .visual-comparison {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .comp-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .comp-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .track {
+      background: #f1f5f9;
+      height: 22px;
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .fill {
+      height: 100%;
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .fill.cash { background: #94a3b8; }
+    .fill.compound { background: linear-gradient(90deg, #10b981, #059669); }
+
+    /* Pantalla 3: Simulación App */
+    .mock-phone {
+      background: white;
+      border: 2px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .mock-header {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .mock-btn {
+      width: 100%;
+      background: #f8fafc;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .mock-btn.correct-target {
+      border-color: var(--primary);
+      background: #eff6ff;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    .sub-options {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+      padding-left: 8px;
+      border-left: 3px solid var(--accent);
+    }
+
+    .sub-btn {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .sub-btn.selected {
+      background: #ecfdf5;
+      border-color: var(--accent);
+      font-weight: 700;
+      color: var(--accent-dark);
+    }
+
+    /* Pantalla 4: Evaluación */
+    .quiz-card {
+      background: white;
+      border-radius: 14px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+
+    .quiz-q {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .quiz-opts {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .opt-chip {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 9px;
+      font-size: 0.74rem;
+      cursor: pointer;
+    }
+
+    .opt-chip.active-choice {
+      background: #eff6ff;
+      border-color: var(--primary);
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    .feedback-alert {
+      display: none;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      line-height: 1.35;
+      margin-top: 8px;
+    }
+
+    .feedback-alert.success {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .feedback-alert.error {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    /* Botón */
+    .btn-action {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-action:disabled { background: #cbd5e1; cursor: not-allowed; }
+    .btn-challenge { background: linear-gradient(135deg, #10b981, #059669); }
+  </style>
 </head>
 <body>
-<h1>El trabajo de mi sueños</h1>
+
+  <div class="device-container">
+    <header>
+      <div class="top-bar">
+        <span class="badge-stage" id="stageBadge">Inicio</span>
+        <span class="timer-tag">⏱ 5 min</span>
+        <div class="stage-dots">
+          <div class="dot active" id="dot0"></div>
+          <div class="dot" id="dot1"></div>
+          <div class="dot" id="dot2"></div>
+          <div class="dot" id="dot3"></div>
+          <div class="dot" id="dot4"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ETAPA 0 -->
+    <section class="screen active" id="scr0">
+      <div class="welcome-box">
+        <div class="welcome-avatar">🧑‍💼</div>
+        <h1 style="font-size: 1.45rem; font-weight: 800; color: var(--text); margin-bottom: 6px;">¿Aceptas el Reto?</h1>
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.35; max-width: 270px;">
+          Descubre en 5 minutos cómo tus $50 pesos semanales pueden convertirse en un patrimonio.
+        </p>
+        <div class="challenge-perks">
+          <div class="perk-chip">⚡ Sin trámites complicados</div>
+          <div class="perk-chip">📈 Interés compuesto en acción</div>
+          <div class="perk-chip">📱 Domina tu App oficial</div>
+        </div>
+      </div>
+      <button class="btn-action btn-challenge" onclick="setStage(1)">¡ACEPTO EL RETO! 🚀</button>
+    </section>
+
+    <!-- ETAPA 1 -->
+    <section class="screen" id="scr1">
+      <div>
+        <h2>1. Elige un recorte</h2>
+        <p class="desc">Toca un gasto que podrías reducir este mes:</p>
+        <div class="avatar-zone">
+          <div class="avatar-icon" id="userIcon">🧑‍💼</div>
+          <div class="coin-counter" id="avatarLabel">Ahorro mensual: $0 MXN</div>
+        </div>
+        <div class="items-grid">
+          <div class="item-btn" onclick="toggleItem(this, 200)">
+            <span class="item-icon">☕</span>
+            <span class="item-title">Café preparado</span>
+            <span class="item-price">-$50/sem ($200/mes)</span>
+          </div>
+          <div class="item-btn" onclick="toggleItem(this, 200)">
+            <span class="item-icon">🥤</span>
+            <span class="item-title">Refresco y botana</span>
+            <span class="item-price">-$50/sem ($200/mes)</span>
+          </div>
+          <div class="item-btn" onclick="toggleItem(this, 400)">
+            <span class="item-icon">🚕</span>
+            <span class="item-title">Viajes por prisa</span>
+            <span class="item-price">-$100/sem ($400/mes)</span>
+          </div>
+          <div class="item-btn" onclick="toggleItem(this, 150)">
+            <span class="item-icon">📺</span>
+            <span class="item-title">Suscripción sin uso</span>
+            <span class="item-price">-$150/mes</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn-action" id="btnGoStage2" disabled onclick="setStage(2)">Ver rendimientos ➔</button>
+    </section>
+
+    <!-- ETAPA 2 -->
+    <section class="screen" id="scr2">
+      <div>
+        <h2>2. Efectivo vs. Interés</h2>
+        <p class="desc">Aportando <b id="lblMonthly">$0</b> al mes:</p>
+        <div class="calc-card">
+          <div class="slider-wrap">
+            <label>
+              <span>Tiempo:</span>
+              <span id="lblYears" style="color:var(--primary);">20 años</span>
+            </label>
+            <input type="range" id="rngYears" min="5" max="30" step="5" value="20" oninput="renderCompounding()" />
+          </div>
+          <div class="visual-comparison">
+            <div class="comp-bar">
+              <div class="comp-title">
+                <span>Guardado en casa:</span>
+                <span id="valCash">$0</span>
+              </div>
+              <div class="track">
+                <div class="fill cash" id="barCash" style="width: 25%;"></div>
+              </div>
+            </div>
+            <div class="comp-bar">
+              <div class="comp-title">
+                <span>En tu Afore (+ rendimientos):</span>
+                <span id="valAfore" style="color: var(--accent); font-weight:800;">$0</span>
+              </div>
+              <div class="track">
+                <div class="fill compound" id="barAfore" style="width: 75%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-action" onclick="setStage(3)">Aprender ruta en App ➔</button>
+    </section>
+
+    <!-- ETAPA 3 -->
+    <section class="screen" id="scr3">
+      <div>
+        <h2>3. Ruta en la App</h2>
+        <p class="desc">Toca el botón correcto para configurar:</p>
+        <div class="mock-phone">
+          <div class="mock-header">Menú Principal</div>
+          <div class="mock-btn" style="opacity: 0.5;">Resumen de Saldo</div>
+          <div class="mock-btn correct-target" id="mockBtnAhorro" onclick="triggerAppMenu()">
+            <span>🧑‍💼 Ahorro Voluntario</span>
+            <span style="font-size:0.7rem; color:var(--primary);">👉 Toca aquí</span>
+          </div>
+          <div class="mock-btn" style="opacity: 0.5;">Trámites</div>
+          <div class="sub-options" id="mockSubMenu">
+            <div style="font-size: 0.72rem; font-weight:700;">Opción recomendada:</div>
+            <div class="sub-btn selected">✔ Domiciliación quincenal automática</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-action" id="btnGoStage4" disabled onclick="setStage(4)">Evaluación final ➔</button>
+    </section>
+
+    <!-- ETAPA 4 -->
+    <section class="screen" id="scr4">
+      <div>
+        <h2>4. Evaluación rápida</h2>
+        <p class="desc">Comprueba lo aprendido en dos toques:</p>
+        <div class="quiz-card">
+          <div class="quiz-q">1. ¿Desde qué monto puedes empezar a aportar?</div>
+          <div class="quiz-opts" id="q1Opts">
+            <div class="opt-chip" onclick="answerQ(1, '50', this)">Desde $50 pesos</div>
+            <div class="opt-chip" onclick="answerQ(1, '1000', this)">Solo arriba de $1,000</div>
+          </div>
+        </div>
+        <div class="quiz-card">
+          <div class="quiz-q">2. ¿Por qué el dinero en tu Afore rinde más?</div>
+          <div class="quiz-opts" id="q2Opts">
+            <div class="opt-chip" onclick="answerQ(2, 'correct', this)">Por el interés compuesto y el tiempo</div>
+            <div class="opt-chip" onclick="answerQ(2, 'wrong', this)">Porque no se puede retirar jamás</div>
+          </div>
+        </div>
+        <div class="feedback-alert" id="quizFeedback"></div>
+      </div>
+      <button class="btn-action" id="btnSubmitQuiz" disabled onclick="gradeQuiz()">Finalizar reto</button>
+    </section>
+  </div>
+
+  <script>
+    let currentSavedMonthly = 0;
+    const rateAnnual = 0.065;
+    let currentStage = 0;
+    let answers = { q1: null, q2: null };
+
+    function setStage(stage) {
+      currentStage = stage;
+      document.querySelectorAll('.screen').forEach((s, idx) => {
+        s.classList.toggle('active', idx === stage);
+      });
+      document.querySelectorAll('.dot').forEach((d, idx) => {
+        d.classList.toggle('active', idx === stage);
+      });
+
+      const badges = ["Inicio", "1. Detecta", "2. Compara", "3. Práctica App", "4. Comprueba"];
+      document.getElementById('stageBadge').innerText = badges[stage];
+
+      if (stage === 2) renderCompounding();
+    }
+
+    function toggleItem(btn, amount) {
+      const avatar = document.getElementById('userIcon');
+      btn.classList.toggle('slashed');
+      
+      currentSavedMonthly += btn.classList.contains('slashed') ? amount : -amount;
+
+      avatar.classList.add('bounce');
+      setTimeout(() => avatar.classList.remove('bounce'), 200);
+
+      document.getElementById('avatarLabel').innerText = `Ahorro mensual: $${currentSavedMonthly} MXN`;
+      document.getElementById('btnGoStage2').disabled = currentSavedMonthly <= 0;
+      renderCompounding();
+    }
+
+    function renderCompounding() {
+      const years = parseInt(document.getElementById('rngYears').value);
+      document.getElementById('lblYears').innerText = `${years} años`;
+      document.getElementById('lblMonthly').innerText = `$${currentSavedMonthly} MXN`;
+
+      const months = years * 12;
+      const cashTotal = currentSavedMonthly * months;
+      const r = rateAnnual / 12;
+      const compoundTotal = currentSavedMonthly * ((Math.pow(1 + r, months) - 1) / r);
+
+      document.getElementById('valCash').innerText = `$${Math.round(cashTotal).toLocaleString()} MXN`;
+      document.getElementById('valAfore').innerText = `$${Math.round(compoundTotal).toLocaleString()} MXN`;
+
+      const max = compoundTotal > 0 ? compoundTotal : 1;
+      document.getElementById('barCash').style.width = `${Math.max(12, (cashTotal / max) * 100)}%`;
+      document.getElementById('barAfore').style.width = '100%';
+    }
+
+    function triggerAppMenu() {
+      document.getElementById('mockSubMenu').style.display = 'flex';
+      const target = document.getElementById('mockBtnAhorro');
+      target.classList.remove('correct-target');
+      target.style.background = '#dcfce7';
+      target.style.borderColor = '#10b981';
+      target.innerHTML = '<span>🧑‍💼 Ahorro Voluntario</span><span style="color:#059669; font-size:0.7rem;">✓ Seleccionado</span>';
+      document.getElementById('btnGoStage4').disabled = false;
+    }
+
+    function answerQ(qNum, value, el) {
+      answers[`q${qNum}`] = value;
+      const parent = document.getElementById(`q${qNum}Opts`);
+      parent.querySelectorAll('.opt-chip').forEach(c => c.classList.remove('active-choice'));
+      el.classList.add('active-choice');
+
+      if (answers.q1 && answers.q2) {
+        document.getElementById('btnSubmitQuiz').disabled = false;
+      }
+    }
+
+    function gradeQuiz() {
+      const box = document.getElementById('quizFeedback');
+      const isCorrect = (answers.q1 === '50' && answers.q2 === 'correct');
+
+      box.style.display = 'block';
+      if (isCorrect) {
+        box.className = 'feedback-alert success';
+        box.innerHTML = `<b>¡Reto cumplido! 🎉</b><br>Aprendiste que desde $50 puedes poner a trabajar el interés compuesto. Aplícalo al llegar a casa.`;
+        document.getElementById('btnSubmitQuiz').innerText = "✓ Registro Exitoso";
+        document.getElementById('btnSubmitQuiz').style.background = "var(--accent)";
+        document.getElementById('btnSubmitQuiz').disabled = true;
+
+        // Reinicio automático a los 6 segundos para el próximo turno de la fila
+        setTimeout(() => location.reload(), 6000);
+      } else {
+        box.className = 'feedback-alert error';
+        box.innerHTML = `<b>Revisa:</b> Recuerda que puedes aportar desde $50 y el secreto es el interés compuesto.`;
+      }
+    }
+  </script>
 </body>
 </html>
